@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    
+    
+    <style>html, body, #map { height: 100%; padding: 0; margin: 0 }</style>
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      #selector_menu{
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 9000;
+
+      }
+
+      /* set styles to the div element with id= box */
+      #box{
+        position: absolute;
+        top: 60px;
+        left: 20px;
+        width: 200px;
+        height: 170px;
+        opacity: 0.9;
+        padding: 5px 10px 5px 10px;
+        border-radius: 25px;
+        background-color: #FFF;
+        color: #fdb462;
+
+      }
+      /* set styles to the <h4> tag of the element with id= box */
+      #box h4{
+        font-style: italic;
+      }
+      /* set styles to the <p> tag of the element with id= box */
+      #box p{
+        text-align: center;
+        font-size: 18px;
+        color:red;
+
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id='selector_menu'>
+    <select id='selector'>
+      <option value='no'>Without classification</option>
+      <option value='qua'>Quantile classification</option>
+    </select>
+    </div>  
+
+<div id ="box"><h4>Number of classes</h4><p id="num">None</p></div>
+    <script type="text/javascript">
+      var layer;
+      var vector = [];
+      var legend;
+      var sum = 0
+      
+      function main() {
+
+        var map = L.map('map', { 
+          zoomControl: false,
+          center: [41.390205, 2.154007],
+          zoom: 12
+        });
+
+        // add basemap
+       L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'}).addTo(map);
+
+        cartodb.createLayer(map, {
+          user_name: 'oboix',
+          type: 'cartodb',
+          sublayers: [{
+            sql: "select * FROM barris_barcelona_test;",
+            
+            cartocss: "#barris_barcelona_test{ polygon-fill: #FF6600;polygon-opacity: 1;line-color: #FFF;line-width: 0.5;line-opacity: 1; }",
+          }]
+        }).addTo(map)
+        .done(function(layer){
+          // start SQL API
+          var sql = new cartodb.SQL({ user: 'oboix'});
+          var LayerActions = {
+            no: function(){
+              sql.execute("SELECT * FROM barris_barcelona_test")
+              .done(function(data){
+               
+                layer.setCartoCSS("#barris_barcelona_test{ polygon-fill: #FF6600;polygon-opacity: 1;line-color: #FFF;line-width: 0.5;line-opacity: 1; }");
+              }); 
+             
+            },
+            qua: function(){
+              sql.execute("SELECT unnest(CDB_QuantileBins(array_agg(homes), 3)) FROM barris_barcelona_test") 
+              .done(function(data){
+                for(i = 0; i < data.total_rows; i++){ // loop that reads each column of the table
+                  sum = sum + 1
+                  vector[i] = data.rows[i].unnest; // extract values from the column unnest ans save them in vector array
+
+              }
+              console.log(sum)
+              document.getElementById("num").innerHTML = sum;
+              var cssStyle = [ 
+                    '#barris_barcelona_test{',
+                      'polygon-fill: #FFEDA0;',
+                      'polygon-opacity: 0.8;',
+                      'line-color: #FFF;',
+                      'line-width: 0.5;',
+                      'line-opacity: 1;',
+                    '}',
+                    '#barris_barcelona_test [ homes <= '+ vector[2] + '] {',
+                      'polygon-fill: #F03B20;',
+                    '}',
+                    '#barris_barcelona_test [ homes <= ' + vector[1] + '] {',
+                       'polygon-fill: #FEB24C;',
+                    '}',
+                    '#barris_barcelona_test [ homes <= ' + vector[0] + '] {',
+                       'polygon-fill: #FFEDA0;',
+                    '}'
+               ].join("\n");
+
+              layer.setCartoCSS(cssStyle);
+              });
+              return true;
+            }
+          }
+          $('#selector').change(function() {
+              LayerActions[$(this).val()]();
+          }); 
+          console.log(layer);
+        });
+
+    }
+
+      window.onload = main;
+      
+    </script>
+  </body>
+</html>

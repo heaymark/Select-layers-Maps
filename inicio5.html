@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dropdown menu selector layer with CARTO.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      #selector_menu{
+      	position: absolute;
+      	top: 20px;
+      	left: 20px;
+      	z-index: 9000;
+      }
+    </style>
+    <!-- include cartodb css  -->
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+
+  </head>
+	<body>
+
+		<div id='map'></div>
+
+		<!--- layer selector -->
+		<div id='selector_menu'>
+			<select id='selector'>
+				<option value='reset'>All cities</option>
+				<option value='spain'>Spain</option>
+				<option value = 'france'>France</option>
+				<option value='portugal'>Portugal</option>
+				<option value = 'italy'>Italy</option>
+				<option value='germany'>Germany</option>
+				<option value = 'uk'>United Kingdom</option>
+				<option value='ireland'>Ireland</option>
+			</select>
+		</div>
+
+		<script>
+			
+			function init(){
+				// declare a sublayer variable
+				var sublayer;
+				
+				// create leaflet map and define some properties
+		        var map = L.map('map', { 
+		          zoomControl: false,
+		          center: [43, 0],
+		          zoom: 5
+		        })
+		        // add a base layer to map
+		        L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png', {
+		          attribution: 'CARTO'
+		        }).addTo(map);
+		        // create a variable from CARTO vizjson
+				var layerUrl = 'https://team.carto.com/u/ramirocartodb/api/v2/viz/5df3bb60-86e7-11e6-a93d-0ecd1babdde5/viz.json' ;
+				// create a visualization using map & vizjson variables
+				cartodb.createLayer(map,layerUrl)
+					.addTo(map)
+					.on('done', function(layer){
+						sublayer = layer.getSubLayer(0);
+						// define layer actions
+						var LayerActions = {
+							reset: function(){
+								sublayer.setSQL("SELECT * FROM populated_places");
+							},
+							spain: function(){
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'spain'");
+								return true;
+							},
+							france: function(){
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'france'");
+								return true;
+							},
+							portugal: function(){
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'portugal'");
+								return true;
+							},
+							italy: function(){
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'italy'");
+								return true;
+							},
+							germany: function(){
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'germany'");
+								return true;
+							},
+							uk: function(){
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'United Kingdom'");
+								return true;
+							},
+							ireland: function(){
+								
+								sublayer.setSQL("SELECT * FROM populated_places WHERE adm0name ilike 'ireland'");
+								return true;
+							}
+						}
+					// get selector with JQuery and set layer actions
+					$('#selector').change(function() {
+						LayerActions[$(this).val()]();
+						});	
+					});
+				}
+			window.onload = init;
+		</script>
+	</body>
+</html>

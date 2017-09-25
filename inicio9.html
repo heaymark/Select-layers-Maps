@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+<title>Layer selector example | CartoDB.js</title>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+<style>
+  html, body, #map {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  #layer_selector {
+    position: absolute;
+    top: 170px;
+    right: 20px;
+    padding: 0;
+  }
+  #layer_selector ul {
+    padding: 0; margin: 0;
+    list-style-type: none;
+  }
+  #layer_selector li {
+    border-bottom: 1px solid #999;
+    padding: 12px 22px;
+    font-family: "Helvetica", Arial;
+    font-size: 12px;
+    color: #444;
+    cursor: auto;
+  }
+  #layer_selector li:hover {
+    background-color: #F0F0F0;
+    cursor: pointer;
+  }
+  #layer_selector li.selected {
+    background-color: #EEE;
+  }
+</style>
+
+<link rel="stylesheet"  href="http://libs.cartocdn.com/cartodb.js/v3/3.11/themes/css/cartodb.css" />
+  </head>
+  <body>
+<div id="map"></div>
+<div id="layer_selector" class="cartodb-infobox">
+  <ul>
+    <li data="21" class="selected">Parcours 21.1 km</li>
+    <li data="10">Parcours 10 km</li>
+    <li data="5">Parcours 5 km</li>
+    <li data="2">Parcours 1 et 2 km</li>
+  </ul>
+</div>
+
+<!-- include cartodb.js library -->
+<script src="http://libs.cartocdn.com/cartodb.js/v3/3.11/cartodb.js"></script>
+
+<script>
+  // create layer selector
+  function createSelector(layer) {
+    var sql = new cartodb.SQL({ user: 'documentation' });
+    var $options = $('#layer_selector li');
+    $options.click(function(e) {
+      // get the area of the selected layer
+      var $li = $(e.target);
+      var event = $li.attr('data');
+      // deselect all and select the clicked one
+      $options.removeClass('selected');
+      $li.addClass('selected');
+      // create query based on data from the layer
+      var query = "select * from all_lachine2014_route ";
+        query = "select * from all_lachine2014_route where eventdist =  " + event;
+      //}
+      // change the query in the layer to update the map
+      layer.setSQL(query);
+    });
+  }
+  function main() {
+    cartodb.createVis('map', 'http://veroterio.cartodb.com/api/v2/viz/6a187d7e-991b-11e4-b012-0e9d821ea90d/viz.json', {
+      center_lat: 45.433249,
+      center_lon: -73.693418,
+      zoom: 14
+
+    })
+    .done(function(vis, layers) {
+      // layer 0 is the base layer, layer 1 is cartodb layer
+      var subLayer = layers[1].getSubLayer(0);
+      createSelector(subLayer);
+    })
+    .error(function(err) {
+      console.log(err);
+    });
+  }
+  window.onload = main;
+</script>

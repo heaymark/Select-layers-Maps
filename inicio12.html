@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hide sublayers with CARTO.js</title>
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      #wraper-layer-selector {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+      }
+      .js-layer-selector {
+        width: 175px;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div id="map"></div>
+
+    <div id="wraper-layer-selector">
+      <select class="js-layer-selector">
+        <option value="#" selected disabled>Select a layer</option>
+      </select>
+    </div>
+
+    <style type="cartocss/text" id="citiesStyle">
+      #layer{
+        marker-fill-opacity: 0.9;
+        marker-line-color: #FFF;
+        marker-line-width: 1;
+        marker-line-opacity: 1;
+        marker-placement: point;
+        marker-type: ellipse;
+        marker-width: 5;
+        marker-fill: #000000;
+        marker-allow-overlap: true;
+      }
+    </style>
+
+    <style type="cartocss/text" id="countriesStyle">
+      #layer{
+        polygon-fill: #5CA2D1;
+        polygon-opacity: 0.7;
+        line-color: #5CA2D1;
+        line-width: 2;
+        line-opacity: 1;
+      }
+    </style>
+
+    <script>
+
+      function main() {
+
+        var map = L.map('map', { 
+          zoomControl: false,
+          center: [43, 0],
+          zoom: 4
+        })
+
+        var citiesStyle = $("#citiesStyle").text(),
+            countriesStyle = $("#countriesStyle").text(),
+            selector = $(".js-layer-selector");
+
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png', {
+          attribution: 'CARTO'
+        }).addTo(map);
+
+       cartodb.createLayer(map, {
+          user_name: 'ramirocartodb', 
+          type: 'cartodb',
+          sublayers: [
+          {
+              sql: "SELECT * FROM world_borders",
+              cartocss: countriesStyle
+          },
+          {
+              sql: "SELECT * FROM populated_places",
+              cartocss: citiesStyle
+           }          
+          ]
+        }).addTo(map)
+       .done(function(layer){
+
+        var lyrNames = ['Countries', 'Cities'];
+
+        _.each(lyrNames, function(lyr, index, lyrNames) {
+          selector.append("<option value=" + index + ">" + lyr + "</option>");
+        });
+
+        selector.select2();
+
+        selector.change(function(){
+
+            var input = $( ".js-layer-selector option:selected" ).val(),
+                lyrSelected = $( ".js-layer-selector option:selected" ).text();
+
+            console.log(lyrSelected + " is been hidden.");
+
+            layer.getSubLayer(input).hide();
+
+          });
+
+       });
+
+      }
+
+        // load main() function
+        window.onload = main; 
+
+    </script>
+
+  </body>
+  </html>

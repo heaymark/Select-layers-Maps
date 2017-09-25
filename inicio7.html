@@ -1,0 +1,130 @@
+
+<html>
+  <head>
+    <title>Layer selector example | CartoDB.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        background: black;
+      }
+ 
+      #layer_selector {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 0;
+      }
+ 
+      #layer_selector ul {
+        padding: 0; margin: 0;
+        list-style-type: none;
+      }
+ 
+      #layer_selector li {
+        border-bottom: 1px solid #999;
+        padding: 8px 20px;
+        font-family: "Helvetica", Arial;
+        font-size: 13px;
+        color: #444;
+        cursor: auto;
+      }
+ 
+      #layer_selector li:hover {
+        background-color: #F0F0F0;
+        cursor: pointer;
+      }
+ 
+      #layer_selector li.selected {
+        background-color: #EEE;
+      }
+    </style>
+ 
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
+    <![endif]-->
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="layer_selector" class="cartodb-infobox">
+      <ul>
+        <li id="abc" class="selected">All</li>
+        <li id="efg">Base Layer</li>
+        <li id="hij">Blashemy Incidents <br> 2009 to 2013</li>
+      </ul>
+    </div>
+ 
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
+ 
+    <script>
+      var selectedLayer;
+      // create layer selector
+      function createSelector(layers) {
+        var sql = new cartodb.SQL({ user: 'documentation' });
+ 
+        var $options = $('#layer_selector li');
+        $options.click(function(e) {
+          // get the area of the selected layer
+          var $li = $(e.target);
+          var layer = $li.attr('id');
+      
+      // deselect all and select the clicked one
+          $options.removeClass('selected');
+          $li.addClass('selected');
+      
+          if(selectedLayer != layer ){
+            // definitely more elegant ways to do this, but went for
+            // ease of understanding
+            if (layer == 'abc'){
+              layers.getSubLayer(0).show(); // countries
+              layers.getSubLayer(1).show(); // cables
+              layers.getSubLayer(2).show(); // populated places
+            }
+            else if (layer == 'efg') {
+              layers.getSubLayer(0).show();
+              layers.getSubLayer(1).hide();
+              layers.getSubLayer(2).show();
+            }
+            else {
+              layers.getSubLayer(0).hide();
+              layers.getSubLayer(1).show();
+              layers.getSubLayer(2).hide();
+            }
+          }
+        });
+      }
+ 
+      var layerN = {};
+      function main() {
+        var map = L.map('map', { 
+          zoomControl: true,
+          center: [33, 73],
+          zoom: 5
+        });
+        // get the currently selected style
+        selectedStyle = $('li.selected').attr('id');
+      
+       L.tileLayer('http://{s}.api.cartocdn.com/base-flatblue/{z}/{x}/{y}.png', {
+          attribution: 'CartoDB'
+        }).addTo(map);
+ 
+        cartodb.createLayer(map, 'http://sajjadhaider1.cartodb.com/api/v2/viz/55b36560-7d15-11e3-8ee0-2195e9f211e7/viz.json')
+        .addTo(map)
+        .done(function(layers) {
+          createSelector(layers);
+        })
+        .error(function(err) {
+          console.log(err);
+        });
+      }
+ 
+      window.onload = main;
+    </script>
+  </body>
+</html>

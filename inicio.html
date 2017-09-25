@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Layer selector example | CartoDB.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      #layer_selector {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 0;
+      }
+
+      div.cartodb-layer-selector-box { display: block!Important; }
+    </style>
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.11/themes/css/cartodb.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.11/cartodb.js"></script>
+
+    <script>
+      function main() {
+        cartodb.createVis('map', 'https://finanzasdf.carto.com/u/develop/api/v2/viz/d2dc6eb1-1dd4-4eb8-8aa9-d629bba144d9/viz.json', { //http://arce.cartodb.com/api/v2/viz/17faec08-9d66-11e4-9a6c-0e853d047bba/viz.json
+          center_lat: 40.72410403167141,
+          center_lon: -73.94622802734375,
+          zoom: 13
+        })
+        .done(function(vis, layers) {
+          // layer 0 is the base layer, layer 1 is cartodb layer
+          var subLayer = layers[1].getSubLayer(0);
+
+          var selector = cdb.vis.Overlay.create('layer_selector', vis, {layer_selector: true})
+
+          $("body").prepend(selector.render().$el)
+        })
+        .error(function(err) {
+          console.log(err);
+        });
+      }
+
+      window.onload = main;
+    </script>
+  </body>
+</html>
